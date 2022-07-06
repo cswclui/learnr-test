@@ -26,6 +26,8 @@ runtime: shiny_prerendered
 ```
 
 
+
+
 ```{r setup, include=FALSE}
 
 library(learnr)
@@ -33,6 +35,7 @@ library(gradethis)
 gradethis_setup()
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(exercise.checker = gradethis::grade_learnr)
+
 
 
 #Event Recorder Reference:
@@ -46,9 +49,10 @@ new_recorder <- function(tutorial_id, tutorial_version, user_id, event, data) {
     # process data here
 }
 options(tutorial.event_recorder = new_recorder)
+
+
 #options(tutorial.event_recorder = learnr:::debug_event_recorder)
 ```
-
 
 
 

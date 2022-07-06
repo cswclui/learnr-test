@@ -1,0 +1,73 @@
+---
+title: "gradethis examples"
+output: learnr::tutorial
+runtime: shiny_prerendered
+tutorial:
+id: "demo-types"
+version: 1.0
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(gradethis)
+
+install.packages("testthat")
+library(testthat)
+
+event_register_handler("session_start",
+function(session, event, data) {
+
+.server_context<<-"test1"
+
+})
+```
+
+## Intro
+
+```{r setup-all}
+c=1
+```
+
+
+```{r ex1-setup}
+#.server_context<-"testing"
+b=2
+```
+
+
+
+What is 1+1?
+```{r ex1, exercise=TRUE,  exercise.global_setup="setup-all"}
+x <-2
+```
+
+
+```{r ex1-solution}
+
+```
+
+
+```{r ex1-check}
+mytest <- function(){
+    test_that('Check x', {
+        expect_true(exists("x")) 
+        })
+    print("success")
+}
+
+grade_this({
+  if (!exists("x", envir=.envir_result))
+    fail("The variable male survival proportion is not defined.")
+  
+  x <- get("x", envir = .envir_result)
+  
+  test_that('Check x', {
+    expect_true(exists("x"))
+    expect_true(x==2) 
+    })
+  pass("Success!!!")
+  #fail("Wrong Answer.")
+})
+
+```

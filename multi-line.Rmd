@@ -1,0 +1,29 @@
+---
+title: "Test"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE,message=FALSE}
+library("learnr")
+
+new_recorder <- function(tutorial_id, tutorial_version, user_id, event, data) {
+    cat("-------event received----\n")
+    print(data$code)
+    cat("-------end event ---\n\n-")
+}
+options(tutorial.event_recorder = new_recorder)
+```
+
+# Test
+
+```{r demo, exercise = TRUE}
+3
+```
+
+```{r demo-hint, eval=FALSE}
+1
+2
+```

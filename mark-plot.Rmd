@@ -1,0 +1,288 @@
+---
+title: "ggplot grade demo"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE,message=FALSE}
+library("learnr")
+library(gradethis)
+library(tidyverse)
+library(digest)
+check_plot<-function (plot, type=NA, x=NA,y=NA,data=NA,
+                       geom_type=NA,xlabel=NA,ylabel=NA,
+                      color=NA, shape=NA,
+                       title=NA,
+                       binwidth=NA, bins=NA
+                       ){
+
+  l <- data.frame() #initialize marking object
+  
+
+  msg="Should return a ggplot2 plot"
+  check ="ggplot" %in% class(plot)
+  l<-rbind(l, data.frame(tc=msg,is_correct=check,expected=NA, actual=NA))
+  if (!check) #return (data frame, correct_percentage)
+    return (list(result=l,correct_percent=sum(l$is_correct)/nrow(l)))
+  
+  msg="Using the correct data frame"
+  check = (digest(data)==digest(plot$data))
+  l<-rbind(l, data.frame(tc=msg,is_correct=check,expected=NA, actual=NA))
+  if (!check)
+    return (list(result=l,correct_percent=sum(l$is_correct)/nrow(l)))
+
+  #get plot properties
+  properties <- c(plot$layers[[1]]$mapping, plot$mapping)
+  labels <- plot$labels
+  actual_x=rlang::get_expr(properties$x) #data source for x axis
+  actual_y=rlang::get_expr(properties$y) #data source for y axis
+  actual_xlabel <- plot$labels$x
+  actual_ylabel <- plot$labels$y
+  actual_shape <- rlang::get_expr(properties$shape)
+  actual_colour <- rlang::get_expr(properties$colour)
+  actual_geom_type<- c(class(plot$layers[[1]]$geom))
+  actual_title=labels$title
+
+    
+  if (!is.na(x)){ #check x axis data source
+      expected=x
+      actual=rlang::as_string(actual_x)
+      msg=paste("The x-axis should be: ",expected)
+      l<-assert_equal(l,msg, expected, actual)
+  }
+  if (!is.na(y)){ #check x axis data source
+      expected=y
+      actual=rlang::as_string(actual_y)
+      msg=paste("The y-axis should be: ",expected)
+      l<-assert_equal(l,msg, expected, actual)
+  }
+  if (!is.na(xlabel)){ #check x axis label
+      expected=xlabel
+      actual=actual_xlabel
+      msg=paste("The x-axis label should be: ",expected)
+      l<-assert_equal(l,msg, expected, actual)
+  }  
+  if (!is.na(ylabel)){ #check y axis label
+      expected=ylabel
+      actual=actual_ylabel
+      msg=paste("The y-axis label should be: ",expected)
+      l<-assert_equal(l,msg, expected, actual)
+  }    
+  if (!is.na(color)){ #check color mapping
+      expected=color
+      actual=actual_colour
+      print(actual_colour)
+      msg=paste("The color should be mapped to: ",expected)
+      l<-assert_equal(l,msg, expected, actual)
+  }      
+  if (!is.na(shape)){ #check shape mapping
+      expected=shape
+      actual=actual_shape  
+      msg=paste("The shape should be mapped to: ",expected)
+      l<-assert_equal(l,msg, expected, actual)
+    }     
+  
+  if (!is.na(title)){ #check chart title
+      expected=title
+      actual=actual_title
+      msg=paste("The chart title should be: ",expected)
+      if (is.null(actual_title)){
+        l<-rbind(l, data.frame(tc=msg, is_correct=FALSE, 
+                             expected=expected, actual=NA))
+      } else{
+        check = (expected==actual)
+        l<-rbind(l, data.frame(tc=msg, is_correct=check, 
+                             expected=expected, actual=actual))
+      }
+  }
+  
+  # Check for histogram
+  if (geom_type == "GeomBar"){
+    if (!is.na(binwidth)){
+      expected=binwidth
+      actual=plot$layers[[1]]$stat_params$binwidth
+      msg=paste("The binwidth should be ",expected)
+      l<-assert_equal(l,msg, expected, actual)
+    }
+  }  
+    
+  
+  return (list(result=l,correct_percent=sum(l$is_correct)/nrow(l)*100))
+}
+
+assert_equal=function(l,msg,expected,actual){
+      if (is.null(actual)){
+        l<-rbind(l, data.frame(tc=msg, is_correct=FALSE, 
+                             expected=expected, actual=NA))
+      } else{
+        if(typeof(actual)=="symbol")
+          actual<-rlang::as_string(actual)
+        check = (expected==actual)
+        l<-rbind(l, data.frame(tc=msg, is_correct=check, 
+                               expected=expected, actual=actual))
+      }
+      return (l)
+}
+
+
+
+mark_summary = function(r){
+
+  df<-r$result %>%
+  filter(is_correct==FALSE) %>%
+  select (tc)
+  
+  if (nrow(df)==0)
+    return("")
+  
+  msg= ""
+  for(i in 1:nrow(df)) {
+    row <- df[i,"tc"]
+    msg<-paste(msg, "-", row, "<br/>\n")
+  }
+                 
+  return (msg)
+}
+
+
+```
+
+## For Test
+
+```{r}
+p1<-ggplot(data = mpg) + 
+    geom_point(mapping = aes(x = displ, y = hwy,color=class))+
+    xlab("Engine displacement (displ)")+
+    ylab("Highway miles per gallon (hwy)")+
+    ggtitle("Highway miles per gallon (hwy) vs Engine displacement (displ)")
+
+r=check_plot(p1,x="displ",y="hwy",
+              geom_type="GeomPoint",
+             xlabel="Engine displacement (displ)"
+             ,ylabel="Highway miles per gallon (hwy)",
+             title="Highway miles per gallon (hwy) vs Engine displacement (displ)",
+             color="class",
+             data=mpg)
+r$result
+mark_summary(r)
+
+
+
+p2<-ggplot(data = mpg) +
+  geom_histogram(aes(x=hwy),binwidth = 20) #,bins=10)
+r2=check_plot(p2, 
+                 geom_type="GeomBar", 
+                 binwidth=5,
+                 data=mpg)  
+r2$result
+
+```
+
+
+## Create scatterplot
+
+```{r plot1, exercise=TRUE, eval=FALSE}
+p1<-ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy,color=displ))+
+  xlab("displ")+
+  ylab("hwy)")+
+  ggtitle("Highway miles per gallon (hwy) vs Engine displacement (displ)")
+
+p1
+```
+
+```{r plot1-check}
+grade_this({
+    p1 = .result
+    r=check_plot(p1,x="displ",y="hwy",
+              geom_type="GeomPoint"
+             ,xlabel="Engine displacement (displ)"
+             ,ylabel="Highway miles per gallon (hwy)",
+             title="Highway miles per gallon (hwy) vs Engine displacement (displ)",
+             color="class",
+             data=mpg)
+    
+    
+    if (r$correct_percent==100)
+      pass("Correct!")
+  
+    #print(r$result)
+    fail(mark_summary(r))  
+  }
+)
+
+```
+
+
+## Create histogram
+
+```{r plot2, exercise=TRUE, eval=FALSE}
+plot2<-ggplot(data = mpg) +
+  geom_histogram(aes(x=hwy),binwidth = 20) #,bins=10)
+plot2
+```
+
+```{r plot2-check}
+grade_this({
+    p1 = .result
+    r=check_plot(p1, 
+                 geom_type="GeomBar", 
+                 binwidth=5,
+                 data=mpg)  
+    
+    if (r$correct_percent==100)
+      pass("Correct!")
+  
+    #print(r$result)
+    fail(mark_summary(r))  
+  }
+)
+
+```
+
+
+## Using grade_code
+```{r plot3, exercise=TRUE, eval=FALSE}
+plot2<-ggplot(data = mpg) +
+  geom_histogram(aes(x=hwy),binwidth = 20) #,bins=10)
+plot2
+```
+
+```{r plot3-solution}
+plot2<-ggplot(data = mpg) +
+  geom_histogram(aes(x=hwy),binwidth = 20) #,bins=10)
+plot2
+```
+
+```{r plot3-check}
+grade_code()
+```
+
+## 1+1
+
+
+What is 1+1?
+
+```{r ex30, exercise=TRUE, eval=FALSE}
+2
+```
+
+```{r ex30-solution}
+2
+```
+
+```{r ex3-check}
+grade_this({
+    if (.result==2) {
+      pass("Good.")
+    } 
+    fail("Please try again!")
+  }
+)
+
+```
+
+
+

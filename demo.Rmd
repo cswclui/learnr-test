@@ -1,0 +1,159 @@
+---
+title: "ggplot grade demo"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE,message=FALSE}
+#library("learnr")
+library(gradethis)
+library(testthat)
+library(tidyverse)
+library(digest)
+
+```
+
+
+# Create scatterplot
+
+
+```{r plot1, exercise=TRUE, eval=FALSE}
+p1<-ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy,color=class))+
+  xlab("Engine displacement (displ)")+
+  ylab("Highway miles per gallon (hwy)")+
+  ggtitle("Highway miles per gallon (hwy) vs Engine displacement (displ)")
+
+p1
+```
+
+```{r plot1-check}
+grade_this({
+    plot = .result
+    result=check_plot(plot,x="displ",geom_type="GeomPoint"
+                 ,xlabel="Engine displacement (displ)"
+                 ,ylabel="Highway miles per gallon (hwy)",
+               title="Highway miles per gallon (hwy) vs Engine displacement (displ)",
+               data_digest=digest(mpg))
+    if (result$is_pass)
+      pass("Good job!")
+  
+    cat(result$error_msg, sep = '\n')
+    fail("error!")  
+  }
+)
+
+```
+
+## others
+
+
+```{r}
+library(ggplot2)
+library(digest)
+plot<-ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy,shape=class))+
+  xlab("Engine displacement (displ)")+
+  ylab("Highway miles per gallon (hwy)")+
+  ggtitle("Highway miles per gallon (hwy) vs Engine displacement (displ)")
+
+plot2<-ggplot(data = mpg) +
+  geom_histogram(aes(x=hwy),binwidth = 20) #,bins=10)
+plot2
+
+plot3<-ggplot(data = mpg) +
+  geom_bar(aes(x=hwy)) #,bins=10)
+plot3
+
+c(class(plot2$layers[[1]]$geom))
+c(class(plot3$layers[[1]]$geom))
+
+binwidth=plot2$layers[[1]]$computed_stat_params$binwidth
+bins=plot2$layers[[1]]$computed_stat_params$bins
+binwidth
+#ggplot_build(p)
+#ggplot_build(p)$layout$panel_params[[1]]$x.labels
+
+properties <- c(plot$layers[[1]]$mapping, plot$mapping)
+rlang::get_expr(properties$shape)
+
+
+out<-check_plot(plot,x="displ",geom_type="GeomPoint"
+                 ,xlabel="Engine displacement (displ)"
+                 ,ylabel="Highway miles per gallon (hwy)",data_digest=digest(mpg))
+
+plot2<-ggplot(data = mpg) +
+  geom_histogram(aes(x=hwy),binwidth = 5) #,bins=10)
+actual_binwidth = plot2$layers[[1]]$computed_stat_params$binwidth
+actual_binwidth
+
+plot2$layers[[1]]$computed_stat_params$binwidth
+
+out3<-check_plot(plot2, geom_type="GeomBar", binwidth=5,data_digest=digest(mpg))
+out3$is_pass
+cat(out3$error_msg, sep = '\n')
+  
+
+```
+
+## mpg
+
+```{r mpg0, exercise = TRUE}
+
+```
+
+```{r mpg0-solution}
+mpg
+```
+
+
+```{r mpg0-check}
+grade_this({
+  print(.result)
+  print(.solution)
+  # custom checking code appears here
+  if (identical(.result, .solution)) {
+    pass("Good job!  We'll use interactive code chunks like this throughout these tutorials. Whenever you encounter one, you can click Submit Answer to run (or re-run) the code in the chunk. If there is a Solution button, you can click it to see the answer.")
+  }
+  
+  # call log for mistake
+  fail("Please try again!")
+})
+
+#grade_code()
+```
+
+
+## 1+1
+
+What is 1+1?
+
+```{r ex3, exercise=TRUE, eval=FALSE}
+2
+```
+
+```{r ex3-solution}
+2
+```
+
+
+```{r ex3-check}
+grade_this({
+    if (.result==.solution) {
+      pass("Good.")
+    } 
+    fail("Please try again!")
+  }
+)
+
+
+```
+
+
+
+
+# Day 2
+
+section 2 details
